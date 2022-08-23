@@ -1,22 +1,20 @@
 require('dotenv').config();
 
 const express = require('express');
-const mongoose = require('mongoose');
 const routes = require('./routes/routes');
+const mcRoutes = require('./routes/mcRoutes');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
-const mongoString = process.env.DATABASE_URL;
+const db = require('./mongoUtils');
 
-mongoose.connect(mongoString, { useNewUrlParser: true });
-const database = mongoose.connection;
-
-database.on('error', (error) => {
+db.on('error', (error) => {
     console.log(error)
 })
 
-database.once('connected', () => {
+db.once('connected', () => {
     console.log('Database Connected');
 })
+
 const app = express();
 
 app.use(express.json());
@@ -35,13 +33,9 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: "http://localhost:3000/api",
+                url: "http://localhost:3000/moldcost"
             },
         ],
-        contact: {
-            name: "thomas",
-            email: "thomas.ngo@siemens.com"
-        },
         host: `localhost:3000`,
         basePath: '/',
         produces: ['application/json'],
@@ -49,17 +43,24 @@ const swaggerOptions = {
             'http',
         ],
     },
-    apis: ["./routes/*.js"]
+    apis: ["./routes/mcRoutes.js"]
 }
 
-app.use('/api', routes);
+// app.use('/api', routes);
+app.use('/moldcost', mcRoutes);
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 const options = {
     customSiteTitle: 'Data Service API',
     customCss: '.topbar { display: none }',
 };
-app.get('/api.json', (req, res) => {
+
+// app.get('/api.json', (req, res) => {
+//     res.setHeader('Content-Type', 'application/json');
+//     res.status(200).json(swaggerDocs);
+// });
+
+app.get('/moldcost.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(swaggerDocs);
 });
